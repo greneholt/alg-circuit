@@ -11,6 +11,8 @@
 
 #include <string>
 
-void make_input(std::string filename, long size);
+enum strategy_t { RANDOM, PROXIMITY, PROXIMITY_RANDOM };
+
+void make_input(std::string filename, long size, strategy_t strategy);
 
 #endif
