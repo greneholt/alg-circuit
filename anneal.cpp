@@ -118,7 +118,7 @@ void anneal(int* input, int size)
 	}
 }
 
-int main(int argc, char** argv) {
+int anneal_main(int argc, char** argv) {
   char line[1024];
   ifstream input;
   int chips;

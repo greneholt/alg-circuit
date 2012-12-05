@@ -10,7 +10,7 @@
 #include <string>
 #include <boost/program_options.hpp>
 
-//#include "make_input.h"
+#include "make_input.h"
 
 namespace po = boost::program_options;
 
@@ -40,7 +40,7 @@ int main(int argc, const char * argv[])
     }
     
     if (vm.count("generate")) {
-        //make_input(generate_file, input_size);
+        make_input(generate_file, input_size);
         return 0;
     }
     

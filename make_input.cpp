@@ -1,3 +1,5 @@
+#include "make_input.h"
+
 #include <cstdlib>
 #include <time.h>
 #include <fstream>
