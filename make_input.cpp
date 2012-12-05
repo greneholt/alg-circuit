@@ -3,16 +3,17 @@
 #include <cstdlib>
 #include <time.h>
 #include <fstream>
+#include "matrix.h"
 
 using namespace std;
 
-void make_input(string filename, long size, strategy_t strategy)
+void make_input(string filename, long size, input_type_t input_type)
 {
-	int cost[size][size];
+    matrix<int> cost(size, size);
 
-	srand(time(NULL));
+	srand((unsigned int)time(NULL));
 
-	if (strategy == RANDOM) {
+	if (input_type == RANDOM) {
 		for (int i = 0; i < size; i++) {
 			for (int j = i; j < size; j++) {
 				if (i == j) {
