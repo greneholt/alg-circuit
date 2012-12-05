@@ -66,7 +66,7 @@ void anneal(int* input, int size)
 	double merit, flip;         /* hold swap accept conditions*/
 	double exponent;            /* exponent for energy funct*/
 
-        srand(time(NULL));
+    srand(time(NULL));
 
 	temperature = INITIAL_TEMPERATURE;
 

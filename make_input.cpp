@@ -4,14 +4,13 @@
 
 using namespace std;
 
-#define SIZE 100
-
-int main() {
-  int cost[SIZE][SIZE];
-  ofstream file;
+void make_input(string filename, long size) {
+  int cost[size][size];
+    
   srand(time(NULL));
-  for(int i = 0; i < SIZE; i++) {
-    for(int j = i; j < SIZE; j++) {
+
+  for(int i = 0; i < size; i++) {
+    for(int j = i; j < size; j++) {
       if(i == j) {
         cost[i][j] = 0;
         continue;
@@ -21,11 +20,12 @@ int main() {
       cost[j][i] = val;
     }
   }
-  file.open("input.txt");
-  file << SIZE << endl;
-  for(int i = 0; i < SIZE; i++) {
+    
+  ofstream file(filename);
+  file << size << endl;
+  for(int i = 0; i < size; i++) {
     file << cost[i][0];
-    for(int j = 1; j < SIZE; j++) {
+    for(int j = 1; j < size; j++) {
       file << " " << cost[i][j];
     }
     file << endl;
