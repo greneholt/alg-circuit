@@ -18,7 +18,7 @@
 
 using namespace std;
 
-const int INITIAL_TEMPERATURE = 1;
+const double INITIAL_TEMPERATURE = 1;
 const bool TRACE_OUTPUT = false;
 const int COOLING_STEPS = 50;
 const double COOLING_FRACTION = 0.97;
@@ -30,50 +30,48 @@ const double K = 0.01;
  element should be in the circuit.
  */
 
-
-
 template < class T, class S >
 long long swap(T &connections, int size, S &solution, int i1, int i2)
 {
 	long long delta = 0;
-	
+
 	int a = solution[i1]; // original position of i1 in the circuit
 	int b = solution[i2]; // original position of i2 in the circuit
-	
+
 	// perform the swap
 	solution[i1] = b;
 	solution[i2] = a;
-	
+
 	// we need a to be before b in the circuit
 	if (a > b) {
 		int t = b;
 		b = a;
 		a = t;
-		
+
 		// swap the indices to match
 		int ti = i2;
 		i2 = i1;
 		i1 = ti;
 	}
-	
+
 	/*
 	 There are three separate sets of connections that need to be considered:
-	 
+
 	 1. Before a (a will get farther away, b will get closer)
 	 2. Between a and b (the distance change needs to be calculated, it could be closer or farther)
 	 3. After b (a will get closer, b will get farther away)
 	 */
-	
+
 	int sep = b - a;
-	
+
 	for (int i = 0; i < size; i++) {
 		// i1 and i2 stay at the same distance from each other, so skip them
 		if (i == i1 || i == i2) {
 			continue;
 		}
-		
+
 		int pos = solution[i];
-		
+
 		// if its before a, i1 will get farther away and i2 will get closer
 		if (pos < a) {
 			delta += sep * connections[i][i1];
@@ -92,7 +90,7 @@ long long swap(T &connections, int size, S &solution, int i1, int i2)
 			delta -= dist_change * connections[i][i2];
 		}
 	}
-	
+
 	return delta;
 }
 
@@ -126,9 +124,10 @@ void anneal(T &connections, int size, S &solution, long long &cost)
 			int i1, i2;
 			// pick indices of elements to swap
 			do {
-			i1 = rand() % size;
-			i2 = rand() % size;
-			} while (i1 == i2);
+				i1 = rand() % size;
+				i2 = rand() % size;
+			}
+			while (i1 == i2);
 
 			// calculate the cost of the change
 			long long delta = swap(connections, size, solution, i1, i2);
@@ -160,16 +159,16 @@ void anneal(T &connections, int size, S &solution, long long &cost)
 			else { // revert the swap
 				swap(connections, size, solution, i1, i2);
 			}
-			
+
 			if (TRACE_OUTPUT) {
 				cout << "Cost: " << cost << endl;
 			}
 		}
-		
+
 		// if the cost isn't going down, lower the temperature
 		if ((cost - before_cost) >= 0) {
 			temperature *= COOLING_FRACTION;
-			
+
 			if (TRACE_OUTPUT) {
 				cout << "reduce temperature to " << temperature << endl;
 			}
@@ -212,15 +211,15 @@ void anneal_file(string filename, long steps)
 	long long cost;
 
 	initialize_solution(connections, size, solution, cost);
-	
+
 	anneal(connections, size, solution, cost);
 
 	vector<int> order(size);
-	
+
 	for (int i = 0; i < size; i++) {
 		order[solution[i]] = i;
 	}
-	
+
 	cout << order[0];
 	for (int i = 1; i < size; i++) {
 		cout << " " << order[i];

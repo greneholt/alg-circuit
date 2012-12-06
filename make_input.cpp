@@ -42,7 +42,9 @@ void generate_proximity(T &connections, int size, int proximity_distance)
 		for (int i = 0; i < size; i++) {
 			int end  = min(i + proximity_distance + 1, size);
 			for (int j = max(i - proximity_distance, 0); j < end; j++) {
-				if (i == j) continue;
+				if (i == j) {
+					continue;
+				}
 
 				connections[j][i] = (connections[i][j] += rand() % MAX_CONNECTIONS);
 			}
