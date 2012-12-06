@@ -11,6 +11,6 @@
 
 #include <string>
 
-void anneal_file(std::string filename, long steps);
+void anneal_file(std::string connections_filename, std::string solution_filename);
 
 #endif

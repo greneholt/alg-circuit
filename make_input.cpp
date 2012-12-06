@@ -4,6 +4,7 @@
 #include <time.h>
 #include <fstream>
 #include <algorithm>
+#include <iostream>
 #include "matrix.h"
 
 using namespace std;
@@ -63,6 +64,10 @@ void make_input(std::string filename, int size, int noise_density, int proximity
 	generate_proximity(connections, size, proximity_distance);
 
 	ofstream file(filename.c_str());
+	if (file.fail()) {
+		cout << "Error opening connections file: " << filename << endl;
+		exit(1);
+	}
 	file << size << endl;
 
 	for (int i = 0; i < size; i++) {

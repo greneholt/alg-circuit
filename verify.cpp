@@ -1,3 +1,5 @@
+#include "verify.h"
+
 #include <iostream>
 #include <fstream>
 #include <istream>
@@ -6,29 +8,22 @@
 #include <string>
 
 #include "matrix.h"
+#include "load_connections.h"
 
 using namespace std;
 
-void verify_solution(string cost_matrix, string solution_file) {
-	ifstream cost(cost_matrix.c_str());
-	if (cost.fail()) {
-		cout << "Error opening cost matrix file: " << cost_matrix.c_str() << endl;
-		return;
-	}
-	ifstream solution(solution_file.c_str());
+void verify_solution(string connections_filename, string solution_filename)
+{
+	ifstream solution(solution_filename.c_str());
 	if (solution.fail()) {
-		cout << "Error opening solution file" << endl;
-		return;
-	}
-	int size;
-	{
-		string line;
-		getline(cost, line);
-		stringstream stream(line);
-		stream >> size;
+		cout << "Error opening solution file: " << solution_filename << endl;
+		exit(1);
 	}
 
-	int *sol = new int[size];
+	int size;
+	matrix<int> connections = load_connections(connections_filename, size);
+
+	vector<int> sol(size);
 
 	{
 		string line;
@@ -39,25 +34,29 @@ void verify_solution(string cost_matrix, string solution_file) {
 		}
 	}
 
-	matrix<int> connections(size, size);
-
-	for (int i = 0; i < size; i++) {
+	int solution_cost;
+	{
 		string line;
-		getline(cost, line);
+		getline(solution, line);
 		stringstream stream(line);
-
-		for (int j = 0; j < size; j++) {
-			stream >> connections[i][j];
-		}
+		stream >> solution_cost;
 	}
 
-	cost.close();
 	solution.close();
+
 	long long total_cost = 0;
 	for(int i = 0; i < size; i++) {
 		for(int j = i + 1; j < size; j++) {
-			total_cost += connections[sol[i]][sol[j]] * abs(i-j);
+			total_cost += connections[sol[i]][sol[j]] * abs(i - j);
 		}
 	}
+
+	if (total_cost == solution_cost) {
+		cout << "solution is valid" << endl;
+	}
+	else {
+		cout << "solution is INVALID" << endl;
+	}
+	
 	cout << "cost is: " << total_cost << endl;
 }

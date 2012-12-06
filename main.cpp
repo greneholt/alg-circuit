@@ -23,20 +23,21 @@ int main(int argc, const char *argv[])
 	int generate_size;
 	int noise_density;
 	int proximity_distance;
-	long annealing_steps;
-	string input_file, generate_file, solution_file;
+	string connections_filename, solution_filename;
 
 	po::options_description desc("Allowed options");
 	desc.add_options()
 	("help", "print help message")
-	("generate", po::value<string>(&generate_file), "generate circuit file")
-	("size", po::value<int>(&generate_size), "size of circuit to generate")
+	("generate", "generate connections file")
+	("anneal", "perform simulated annealing on the connections file and output the solution file")
+	("verify", "verify the validity of the solution file for the connections file")
+	
+	("connections,C", po::value<string>(&connections_filename)->default_value("input.txt"), "the connections file")
+	("solution,S", po::value<string>(&solution_filename)->default_value("solution.txt"), "the solution file")
+	
+	("size", po::value<int>(&generate_size)->default_value(100), "size of circuit to generate")
 	("noise", po::value<int>(&noise_density)->default_value(10), "noise density in the generated file (out of 100)")
 	("distance", po::value<int>(&proximity_distance)->default_value(10), "maximum length of proximity connections in generated file")
-	("anneal", po::value<string>(&input_file), "anneal specified file")
-	("steps", po::value<long>(&annealing_steps)->default_value(1000), "number of annealing steps")
-	("solution", po::value<string>(&solution_file), "solution specified file")
-	("cost_matrix", po::value<string>(&input_file)->default_value("default.txt"), "specify a cost matrix")
 	;
 
 	po::variables_map vm;
@@ -49,17 +50,17 @@ int main(int argc, const char *argv[])
 	}
 
 	if (vm.count("generate")) {
-		make_input(generate_file, generate_size, noise_density, proximity_distance);
+		make_input(connections_filename, generate_size, noise_density, proximity_distance);
 		return 0;
 	}
 
 	if (vm.count("anneal")) {
-		anneal_file(input_file, annealing_steps);
+		anneal_file(connections_filename, solution_filename);
 		return 0;
 	}
 
-	if (vm.count("solution")) {
-		verify_solution(input_file, solution_file);
+	if (vm.count("verify")) {
+		verify_solution(connections_filename, solution_filename);
 		return 0;
 	}
 

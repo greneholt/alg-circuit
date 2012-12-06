@@ -9,6 +9,7 @@
 #include "time.h"
 
 #include "matrix.h"
+#include "load_connections.h"
 
 using namespace std;
 
@@ -91,6 +92,8 @@ long long swap(T &connections, int size, S &solution, int i1, int i2)
 template < class T, class S >
 void initialize_solution(T &connections, int size, S &solution, long long &cost)
 {
+	cost = 0;
+	
 	// initialize the solution so that the ith circuit element is in the ith position
 	for (int i = 0; i < size; i++) {
 		solution[i] = i;
@@ -178,41 +181,11 @@ void anneal(T &connections, int size, S &solution, long long &cost)
 	solution = best_solution;
 }
 
-void anneal_file(string filename, long steps)
+void anneal_file(string connections_filename, string solution_filename)
 {
-	ifstream input(filename.c_str());
-	if (input.fail()) {
-		cout << "Error opening file" << endl;
-		return;
-	}
-
 	int size;
-
-	// load line count
-	{
-		string line;
-		getline(input, line);
-		stringstream stream(line);
-		stream >> size;
-	}
 	
-	if (size == 0) {
-		cout << "Error: zero size matrix" << endl;
-		return;
-	}
-
-	matrix<int> connections(size, size);
-
-	// load the connections
-	for (int i = 0; i < size; i++) {
-		string line;
-		getline(input, line);
-		stringstream stream(line);
-
-		for (int j = 0; j < size; j++) {
-			stream >> connections[i][j];
-		}
-	}
+	matrix<int> connections = load_connections(connections_filename, size);
 
 	vector<int> solution(size);
 
@@ -228,11 +201,25 @@ void anneal_file(string filename, long steps)
 		order[solution[i]] = i + 1;
 	}
 
+	ofstream solution_file(solution_filename.c_str());
+	
+	if (solution_file.fail()) {
+		cout << "Error opening solution file: " << solution_filename << endl;
+		exit(1);
+	}
+	
+	// write the solution to the console and the solution file
 	cout << order[0];
+	solution_file << order[0];
 	for (int i = 1; i < size; i++) {
 		cout << " " << order[i];
+		solution_file << " " << order[i];
 	}
 	cout << endl;
+	solution_file << endl;
 
 	cout << cost << endl;
+	solution_file << cost << endl;
+	
+	solution_file.close();
 }

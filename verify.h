@@ -3,6 +3,6 @@
 
 #include <string>
 
-void verify_solution(std::string cost_matrix, std::string solution_file);
+void verify_solution(std::string connections_filename, std::string solution_filename);
 
 #endif
