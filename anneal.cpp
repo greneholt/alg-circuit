@@ -15,8 +15,8 @@ using namespace std;
 
 const double INITIAL_TEMPERATURE = 1;
 const bool TRACE_OUTPUT = false;
-const int COOLING_STEPS = 500;
-const double COOLING_FRACTION = 0.97;
+const int COOLING_STEPS = 2000;
+const double COOLING_FRACTION = 0.95;
 const int STEPS_PER_TEMP = 10000;
 const double K = 0.1;
 
@@ -26,9 +26,9 @@ const double K = 0.1;
  */
 
 template < class T, class S >
-long long swap(T &connections, int size, S &solution, int i1, int i2)
+long swap(T &connections, int size, S &solution, int i1, int i2)
 {
-	long long delta = 0;
+	long delta = 0;
 
 	int a = solution[i1]; // original position of i1 in the circuit
 	int b = solution[i2]; // original position of i2 in the circuit
@@ -90,10 +90,10 @@ long long swap(T &connections, int size, S &solution, int i1, int i2)
 }
 
 template < class T, class S >
-void initialize_solution(T &connections, int size, S &solution, long long &cost)
+void initialize_solution(T &connections, int size, S &solution, unsigned long &cost)
 {
 	cost = 0;
-	
+
 	// initialize the solution so that the ith circuit element is in the ith position
 	for (int i = 0; i < size; i++) {
 		solution[i] = i;
@@ -108,7 +108,7 @@ void initialize_solution(T &connections, int size, S &solution, long long &cost)
 }
 
 template < class T, class S >
-void anneal_step(T &connections, int size, S &solution, long long &cost, double temperature) {	
+void anneal_step(T &connections, int size, S &solution, unsigned long &cost, double temperature) {
 	int i1, i2;
 	// pick indices of elements to swap
 	do {
@@ -116,26 +116,26 @@ void anneal_step(T &connections, int size, S &solution, long long &cost, double 
 		i2 = rand() % size;
 	}
 	while (i1 == i2);
-	
+
 	// calculate the cost of the change
-	long long delta = swap(connections, size, solution, i1, i2);
-	
+	long delta = swap(connections, size, solution, i1, i2);
+
 	double flip = (double)rand() / RAND_MAX;
 	double merit = exp(-delta / (K * cost * temperature));
-	
+
 	if (delta == 0) {
 		return;
 	}
 	else if (delta < 0) { // automatically accept a lower cost
 		cost += delta;
-		
+
 		if (TRACE_OUTPUT) {
 			cout << "swap win: " << i1 << "-" << i2 << " delta=" << delta << " cost=" << cost << " temp=" << temperature << endl;
 		}
 	}
 	else if (merit > flip) { // accept a loss if the the random number generator says so
 		cost += delta;
-		
+
 		if (TRACE_OUTPUT) {
 			cout << "swap loss: " << i1 << "-" << i2 << " delta=" << delta << " cost=" << cost << " temp=" << temperature << endl;
 		}
@@ -146,21 +146,21 @@ void anneal_step(T &connections, int size, S &solution, long long &cost, double 
 }
 
 template < class T, class S >
-void anneal(T &connections, int size, S &solution, long long &cost)
-{	
+void anneal(T &connections, int size, S &solution, unsigned long &cost)
+{
 	srand((unsigned int)time(NULL));
 
 	double temperature = INITIAL_TEMPERATURE; // the current system temp
 
-	long long best_cost = cost;
+	unsigned long best_cost = cost;
 	S best_solution(solution);
-	
+
 	for (int i = 1; i <= COOLING_STEPS; i++) {
-		long long before_cost = cost; // value at start of loop
+		unsigned long before_cost = cost; // value at start of loop
 
 		for (int j = 1; j <= STEPS_PER_TEMP; j++) {
 			anneal_step(connections, size, solution, cost, temperature);
-			
+
 			if (cost < best_cost) {
 				best_cost = cost;
 				best_solution = solution;
@@ -168,7 +168,7 @@ void anneal(T &connections, int size, S &solution, long long &cost)
 		}
 
 		// if the cost isn't going down, lower the temperature
-		if ((cost - before_cost) >= 0) {
+		if (cost >= before_cost) {
 			temperature *= COOLING_FRACTION;
 
 			if (TRACE_OUTPUT) {
@@ -176,7 +176,7 @@ void anneal(T &connections, int size, S &solution, long long &cost)
 			}
 		}
 	}
-	
+
 	cost = best_cost;
 	solution = best_solution;
 }
@@ -184,12 +184,12 @@ void anneal(T &connections, int size, S &solution, long long &cost)
 void anneal_file(string connections_filename, string solution_filename)
 {
 	int size;
-	
+
 	matrix<int> connections = load_connections(connections_filename, size);
 
 	vector<int> solution(size);
 
-	long long cost;
+	unsigned long cost;
 
 	initialize_solution(connections, size, solution, cost);
 
@@ -202,12 +202,12 @@ void anneal_file(string connections_filename, string solution_filename)
 	}
 
 	ofstream solution_file(solution_filename.c_str());
-	
+
 	if (solution_file.fail()) {
 		cout << "Error opening solution file: " << solution_filename << endl;
 		exit(1);
 	}
-	
+
 	// write the solution to the console and the solution file
 	cout << order[0];
 	solution_file << order[0];
@@ -220,6 +220,6 @@ void anneal_file(string connections_filename, string solution_filename)
 
 	cout << cost << endl;
 	solution_file << cost << endl;
-	
+
 	solution_file.close();
 }

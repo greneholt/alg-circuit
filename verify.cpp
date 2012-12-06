@@ -33,7 +33,7 @@ void verify_solution(string connections_filename, string solution_filename)
 		}
 	}
 
-	int solution_cost;
+	unsigned long solution_cost;
 	{
 		string line;
 		getline(solution_file, line);
@@ -43,7 +43,7 @@ void verify_solution(string connections_filename, string solution_filename)
 
 	solution_file.close();
 
-	long long total_cost = 0;
+	unsigned long total_cost = 0;
 	for(int i = 0; i < size; i++) {
 		for(int j = i + 1; j < size; j++) {
 			total_cost += connections[solution[i]-1][solution[j]-1] * abs(i - j);
