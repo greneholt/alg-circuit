@@ -28,9 +28,9 @@ int main(int argc, const char *argv[])
 	po::options_description desc("Allowed options");
 	desc.add_options()
 	("help", "print help message")
-	("generate", "generate connections file")
-	("anneal", "perform simulated annealing on the connections file and output the solution file")
-	("verify", "verify the validity of the solution file for the connections file")
+	("generate,G", "generate connections file")
+	("anneal,A", "perform simulated annealing on the connections file and output the solution file")
+	("verify,V", "verify the validity of the solution file for the connections file")
 	
 	("connections,C", po::value<string>(&connections_filename)->default_value("input.txt"), "the connections file")
 	("solution,S", po::value<string>(&solution_filename)->default_value("solution.txt"), "the solution file")
