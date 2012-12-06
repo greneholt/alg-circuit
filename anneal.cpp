@@ -1,29 +1,22 @@
+#include "anneal.h"
+
 #include <iostream>
 #include <fstream>
 #include <istream>
-#include <string>
 #include <sstream>
 #include <cmath>
+#include "time.h"
 
 #include "matrix.h"
-
-
-#include "math.h"
-#include "stdlib.h"
-#include "stdio.h"
-#include <fstream>
-#include <cstring>
-#include <iostream>
-#include "time.h"
 
 using namespace std;
 
 const double INITIAL_TEMPERATURE = 1;
 const bool TRACE_OUTPUT = false;
-const int COOLING_STEPS = 50;
+const int COOLING_STEPS = 500;
 const double COOLING_FRACTION = 0.97;
-const int STEPS_PER_TEMP = 100;
-const double K = 0.01;
+const int STEPS_PER_TEMP = 1000;
+const double K = 0.1;
 
 /*
  The solution vector stores the position of each element. So solution[i] is where the ith circuit
@@ -132,36 +125,32 @@ void anneal(T &connections, int size, S &solution, long long &cost)
 			// calculate the cost of the change
 			long long delta = swap(connections, size, solution, i1, i2);
 
-			double flip = (double)rand()/RAND_MAX;
-			//exponent = (-delta / cost) / (K * temperature);
-
-			// I don't understand why the above divides the delta by the cost
-			double merit = exp(-delta / (K * temperature));
+			double flip = (double)rand() / RAND_MAX;
+			double merit = exp(-delta / (K * cost * temperature));
 
 			// printf("merit = %f  flip=%f  exponent=%f\n",merit,flip,exponent);
 			// if (merit >= 1.0)
 			// merit = 0.0; // don't do unchanging swaps
 
-			if (delta < 0) { // automatically accept a lower cost
+			if (delta == 0) {
+				continue;
+			}
+			else if (delta < 0) { // automatically accept a lower cost
 				cost += delta;
 
 				if (TRACE_OUTPUT) {
-					cout << "swap WIN " << i1 << "-" << i2 << " delta=" << delta << " temp=" << temperature << " cooling step=" << i << " step=" << j << endl;
+					cout << "swap win: " << i1 << "-" << i2 << " delta=" << delta << " cost=" << cost << " temp=" << temperature << " coolstep=" << i << " step=" << j << endl;
 				}
 			}
 			else if (merit > flip) { // accept a loss if the the random number generator says so
 				cost += delta;
 
 				if (TRACE_OUTPUT) {
-					cout << "swap LOSS " << i1 << "-" << i2 << " delta=" << delta << " temp=" << temperature << " cooling step=" << i << " step=" << j << endl;
+					cout << "swap loss: " << i1 << "-" << i2 << " delta=" << delta << " cost=" << cost << " temp=" << temperature << " coolstep=" << i << " step=" << j << endl;
 				}
 			}
 			else { // revert the swap
 				swap(connections, size, solution, i1, i2);
-			}
-
-			if (TRACE_OUTPUT) {
-				cout << "Cost: " << cost << endl;
 			}
 		}
 
@@ -196,6 +185,7 @@ void anneal_file(string filename, long steps)
 
 	matrix<int> connections(size, size);
 
+	// load the connections
 	for (int i = 0; i < size; i++) {
 		string line;
 		getline(input, line);
@@ -217,7 +207,7 @@ void anneal_file(string filename, long steps)
 	vector<int> order(size);
 
 	for (int i = 0; i < size; i++) {
-		order[solution[i]] = i;
+		order[solution[i]] = i + 1;
 	}
 
 	cout << order[0];
