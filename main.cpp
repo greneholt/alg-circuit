@@ -24,7 +24,7 @@ int main(int argc, const char *argv[])
 	int noise_density;
 	int proximity_distance;
 	long annealing_steps;
-	string input_file, generate_file, solution_file;
+	string input_file, generate_file, solution_file, cost_file;
 
 	po::options_description desc("Allowed options");
 	desc.add_options()
@@ -36,7 +36,7 @@ int main(int argc, const char *argv[])
 	("anneal", po::value<string>(&input_file), "anneal specified file")
 	("steps", po::value<long>(&annealing_steps)->default_value(1000), "number of annealing steps")
 	("solution", po::value<string>(&solution_file), "solution specified file")
-	("cost_matrix", po::value<string>(&input_file)->default_value("default.txt"), "specify a cost matrix")
+	("cost_matrix", po::value<string>(&cost_file)->default_value("default.txt"), "specify a cost matrix")
 	;
 
 	po::variables_map vm;
@@ -59,7 +59,7 @@ int main(int argc, const char *argv[])
 	}
 
 	if (vm.count("solution")) {
-		verify_solution(input_file, solution_file);
+		verify_solution(cost_file, solution_file);
 		return 0;
 	}
 
