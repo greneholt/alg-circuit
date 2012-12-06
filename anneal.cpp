@@ -5,6 +5,7 @@
 #include <istream>
 #include <sstream>
 #include <cmath>
+#include <cstdlib>
 #include "time.h"
 
 #include "matrix.h"
@@ -167,7 +168,7 @@ void anneal(T &connections, int size, S &solution, long long &cost)
 
 void anneal_file(string filename, long steps)
 {
-	ifstream input(filename);
+	ifstream input(filename.c_str());
 	if (input.fail()) {
 		cout << "Error opening file" << endl;
 		return;

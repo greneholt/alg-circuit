@@ -10,12 +10,12 @@
 using namespace std;
 
 void verify_solution(string cost_matrix, string solution_file) {
-	ifstream cost(cost_matrix);
+	ifstream cost(cost_matrix.c_str());
 	if (cost.fail()) {
-		cout << "Error opening cost matrix file" << endl;
+		cout << "Error opening cost matrix file: " << cost_matrix.c_str() << endl;
 		return;
 	}
-	ifstream solution(solution_file);
+	ifstream solution(solution_file.c_str());
 	if (solution.fail()) {
 		cout << "Error opening solution file" << endl;
 		return;
@@ -59,5 +59,5 @@ void verify_solution(string cost_matrix, string solution_file) {
 			total_cost += connections[sol[i]][sol[j]] * abs(i-j);
 		}
 	}
-	cout << "cost is: " << cost << endl;
+	cout << "cost is: " << total_cost << endl;
 }

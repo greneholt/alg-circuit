@@ -36,6 +36,7 @@ int main(int argc, const char *argv[])
 	("anneal", po::value<string>(&input_file), "anneal specified file")
 	("steps", po::value<long>(&annealing_steps)->default_value(1000), "number of annealing steps")
 	("solution", po::value<string>(&solution_file), "solution specified file")
+	("cost_matrix", po::value<string>(&input_file)->default_value("default.txt"), "specify a cost matrix")
 	;
 
 	po::variables_map vm;

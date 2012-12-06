@@ -62,7 +62,7 @@ void make_input(std::string filename, int size, int noise_density, int proximity
 	generate_noise(connections, size, noise_points);
 	generate_proximity(connections, size, proximity_distance);
 
-	ofstream file(filename);
+	ofstream file(filename.c_str());
 	file << size << endl;
 
 	for (int i = 0; i < size; i++) {
