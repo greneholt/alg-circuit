@@ -44,11 +44,6 @@ int main(int argc, const char *argv[])
 	po::store(po::parse_command_line(argc, argv, desc), vm);
 	po::notify(vm);
 
-	if (vm.count("help")) {
-		cout << desc << "\n";
-		return 1;
-	}
-
 	if (vm.count("generate")) {
 		make_input(connections_filename, generate_size, noise_density, proximity_distance);
 		return 0;
@@ -63,7 +58,8 @@ int main(int argc, const char *argv[])
 		verify_solution(connections_filename, solution_filename);
 		return 0;
 	}
-
-	return 0;
+	
+	cout << desc << "\n";
+	return 1;
 }
 
