@@ -11,6 +11,7 @@
 #include <boost/program_options.hpp>
 
 #include "make_input.h"
+#include "anneal.h"
 
 namespace po = boost::program_options;
 
@@ -18,17 +19,21 @@ using namespace std;
 
 int main(int argc, const char *argv[])
 {
-	long input_size, annealing_steps;
-	string input_file, generate_file, input_type;
+	int generate_size;
+	int noise_density;
+	int proximity_distance;
+	long annealing_steps;
+	string input_file, generate_file;
 
 	po::options_description desc("Allowed options");
 	desc.add_options()
 	("help", "print help message")
-	("generate", po::value<string>(&generate_file), "generate input file")
-	("size", po::value<long>(&input_size), "size of input to generate")
+	("generate", po::value<string>(&generate_file), "generate circuit file")
+	("size", po::value<int>(&generate_size), "size of circuit to generate")
+	("noise", po::value<int>(&noise_density)->default_value(10), "noise density in the generated file (out of 100)")
+	("distance", po::value<int>(&proximity_distance)->default_value(10), "maximum length of proximity connections in generated file")
 	("anneal", po::value<string>(&input_file), "anneal specified file")
 	("steps", po::value<long>(&annealing_steps)->default_value(1000), "number of annealing steps")
-    ("input_type", po::value<string>(&input_type), "type of input to generate (random, proximity, proximity-random)")
 	;
 
 	po::variables_map vm;
@@ -41,16 +46,12 @@ int main(int argc, const char *argv[])
 	}
 
 	if (vm.count("generate")) {
-        input_type_t type = RANDOM;
+		make_input(generate_file, generate_size, noise_density, proximity_distance);
+		return 0;
+	}
 
-        if (input_type == "proximity") {
-            type = PROXIMITY;
-        }
-        else if (input_type == "proximity-random") {
-            type = PROXIMITY_RANDOM;
-        }
-
-		make_input(generate_file, input_size, type);
+	if (vm.count("anneal")) {
+		//anneal_file(input_file, annealing_steps);
 		return 0;
 	}
 

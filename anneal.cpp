@@ -1,3 +1,9 @@
+#include <iostream>
+#include <fstream>
+#include <istream>
+#include <string>
+
+
 #include "math.h"
 #include "stdlib.h"
 #include "stdio.h"
@@ -5,6 +11,7 @@
 #include <cstring>
 #include <iostream>
 #include "time.h"
+
 using namespace std;
 
 #define INITIAL_TEMPERATURE 1
@@ -68,7 +75,7 @@ void anneal(int *input, int size)
 	double merit, flip;         /* hold swap accept conditions*/
 	double exponent;            /* exponent for energy funct*/
 
-	srand(time(NULL));
+	srand((unsigned int)time(NULL));
 
 	temperature = INITIAL_TEMPERATURE;
 
@@ -126,21 +133,28 @@ void anneal(int *input, int size)
 	}
 }
 
-int anneal_main(int argc, char **argv)
+void anneal_file(string filename, long steps)
 {
-	char line[1024];
-	ifstream input;
-	int chips;
-	int *order;
-	if (argc != 2) {
-		cout << "Usage:" << endl << argv[0] << " <inputFile>" << endl;
-		return 0;
-	}
-	input.open(argv[1], ifstream::in);
+	/*
+    ifstream input(filename);
 	if (input.fail()) {
 		cout << "Error opening file" << endl;
-		return 0;
+		return;
 	}
+
+	string line;
+    
+    int chips;
+    
+    // load line count
+    {
+        getline(input, line);
+        stringstream ss(line);
+        ss >> chips;
+    }
+
+	
+	int *order;
 
 	input.getline(line, sizeof(line));
 	chips = atoi(line);
@@ -172,4 +186,5 @@ int anneal_main(int argc, char **argv)
 		delete cost_matrix[i];
 	}
 	delete cost_matrix;
+     */
 }

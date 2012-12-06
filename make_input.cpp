@@ -3,32 +3,63 @@
 #include <cstdlib>
 #include <time.h>
 #include <fstream>
+#include <algorithm>
 #include "matrix.h"
 
 using namespace std;
 
-void make_input(string filename, long size, input_type_t input_type)
+const int MAX_CONNECTIONS = 5;
+
+void gen_random(matrix<int> &cost, int size)
 {
-    matrix<int> cost(size, size);
+	for (int i = 0; i < size; i++) {
+		for (int j = i + 1; j < size; j++) {
+			cost[j][i] = (cost[i][j] += rand() % MAX_CONNECTIONS);
+		}
+	}
+}
 
-	srand((unsigned int)time(NULL));
+void gen_noise(matrix<int> &cost, int size, long noise_points)
+{
+	for (long i = 0; i < noise_points; i++) {
+		int a = rand() % size;
+		int b = rand() % size;
 
-	if (input_type == RANDOM) {
+		if (a == b) {
+			continue;
+		}
+
+		cost[b][a] = (cost[a][b] += rand() % 10);
+	}
+}
+
+void gen_proximity(matrix<int> &cost, int size, int proximity_distance)
+{
+	if (proximity_distance > 0) {
 		for (int i = 0; i < size; i++) {
-			for (int j = i; j < size; j++) {
-				if (i == j) {
-					cost[i][j] = 0;
-					continue;
-				}
-				int val = rand() % 5;
-				cost[i][j] = val;
-				cost[j][i] = val;
+			int end  = min(i + proximity_distance + 1, size);
+			for (int j = max(i - proximity_distance, 0); j < end; j++) {
+				if (i == j) continue;
+
+				cost[j][i] = (cost[i][j] += rand() % MAX_CONNECTIONS);
 			}
 		}
 	}
+}
+
+void make_input(std::string filename, int size, int noise_density, int proximity_distance)
+{
+	matrix<int> cost(size, size);
+
+	srand((unsigned int)time(NULL));
+
+	long noise_points = (long) size * size * noise_density / 2 / 100;
+	gen_noise(cost, size, noise_points);
+	gen_proximity(cost, size, proximity_distance);
 
 	ofstream file(filename);
 	file << size << endl;
+
 	for (int i = 0; i < size; i++) {
 		file << cost[i][0];
 		for (int j = 1; j < size; j++) {
@@ -36,5 +67,6 @@ void make_input(string filename, long size, input_type_t input_type)
 		}
 		file << endl;
 	}
+
 	file.close();
 }

@@ -13,23 +13,23 @@
 
 template < class T >
 struct matrix {
-    typedef T value_type;
-    typedef std::vector<value_type> container;
-    
+	typedef T value_type;
+	typedef std::vector<value_type> container;
+
 private:
-    container _data;
-    long _b;
-    
+	container _data;
+	long _b;
+
 public:
-    matrix(long a, long b) : _b(b), _data(a*b) {};
-    
-    value_type* operator[](int a) {
-        return &_data[a * _b];
-    }
-    
-    value_type const* operator[](int a) const {
-        return &_data[a * _b];
-    }
+	matrix(long a, long b) : _b(b), _data(a*b) {};
+
+	value_type* operator[](int a) {
+		return &_data[a * _b];
+	}
+
+	value_type const* operator[](int a) const {
+		return &_data[a * _b];
+	}
 };
 
 #endif /* defined(__CircuitLayout__matrix__) */

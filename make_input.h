@@ -11,8 +11,6 @@
 
 #include <string>
 
-enum input_type_t { RANDOM, PROXIMITY, PROXIMITY_RANDOM };
-
-void make_input(std::string filename, long size, input_type_t input_type);
+void make_input(std::string filename, int size, int noise_density, int proximity_distance);
 
 #endif
