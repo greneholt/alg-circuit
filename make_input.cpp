@@ -10,16 +10,18 @@ using namespace std;
 
 const int MAX_CONNECTIONS = 5;
 
-void gen_random(matrix<int> &cost, int size)
+template < class T >
+void generate_random(T &connections, int size)
 {
 	for (int i = 0; i < size; i++) {
 		for (int j = i + 1; j < size; j++) {
-			cost[j][i] = (cost[i][j] += rand() % MAX_CONNECTIONS);
+			connections[j][i] = (connections[i][j] += rand() % MAX_CONNECTIONS);
 		}
 	}
 }
 
-void gen_noise(matrix<int> &cost, int size, long noise_points)
+template < class T >
+void generate_noise(T &connections, int size, long noise_points)
 {
 	for (long i = 0; i < noise_points; i++) {
 		int a = rand() % size;
@@ -29,11 +31,12 @@ void gen_noise(matrix<int> &cost, int size, long noise_points)
 			continue;
 		}
 
-		cost[b][a] = (cost[a][b] += rand() % 10);
+		connections[b][a] = (connections[a][b] += rand() % 10);
 	}
 }
 
-void gen_proximity(matrix<int> &cost, int size, int proximity_distance)
+template < class T >
+void generate_proximity(T &connections, int size, int proximity_distance)
 {
 	if (proximity_distance > 0) {
 		for (int i = 0; i < size; i++) {
@@ -41,7 +44,7 @@ void gen_proximity(matrix<int> &cost, int size, int proximity_distance)
 			for (int j = max(i - proximity_distance, 0); j < end; j++) {
 				if (i == j) continue;
 
-				cost[j][i] = (cost[i][j] += rand() % MAX_CONNECTIONS);
+				connections[j][i] = (connections[i][j] += rand() % MAX_CONNECTIONS);
 			}
 		}
 	}
@@ -49,21 +52,21 @@ void gen_proximity(matrix<int> &cost, int size, int proximity_distance)
 
 void make_input(std::string filename, int size, int noise_density, int proximity_distance)
 {
-	matrix<int> cost(size, size);
+	matrix<int> connections(size, size);
 
 	srand((unsigned int)time(NULL));
 
 	long noise_points = (long) size * size * noise_density / 2 / 100;
-	gen_noise(cost, size, noise_points);
-	gen_proximity(cost, size, proximity_distance);
+	generate_noise(connections, size, noise_points);
+	generate_proximity(connections, size, proximity_distance);
 
 	ofstream file(filename);
 	file << size << endl;
 
 	for (int i = 0; i < size; i++) {
-		file << cost[i][0];
+		file << connections[i][0];
 		for (int j = 1; j < size; j++) {
-			file << " " << cost[i][j];
+			file << " " << connections[i][j];
 		}
 		file << endl;
 	}

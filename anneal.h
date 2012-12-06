@@ -9,6 +9,8 @@
 #ifndef CircuitLayout_anneal_h
 #define CircuitLayout_anneal_h
 
+#include <string>
 
+void anneal_file(std::string filename, long steps);
 
 #endif

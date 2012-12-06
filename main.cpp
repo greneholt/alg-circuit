@@ -51,7 +51,7 @@ int main(int argc, const char *argv[])
 	}
 
 	if (vm.count("anneal")) {
-		//anneal_file(input_file, annealing_steps);
+		anneal_file(input_file, annealing_steps);
 		return 0;
 	}
 

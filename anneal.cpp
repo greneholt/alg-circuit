@@ -2,6 +2,10 @@
 #include <fstream>
 #include <istream>
 #include <string>
+#include <sstream>
+#include <cmath>
+
+#include "matrix.h"
 
 
 #include "math.h"
@@ -14,120 +18,160 @@
 
 using namespace std;
 
-#define INITIAL_TEMPERATURE 1
-#define TRACE_OUTPUT        0
-#define COOLING_STEPS       500
-#define COOLING_FRACTION    0.97
-#define STEPS_PER_TEMP      10000
-#define E                   2.718
-#define K                   0.01
+const int INITIAL_TEMPERATURE = 1;
+const bool TRACE_OUTPUT = false;
+const int COOLING_STEPS = 50;
+const double COOLING_FRACTION = 0.97;
+const int STEPS_PER_TEMP = 100;
+const double K = 0.01;
 
-int solution_count = 0;                     /* how many solutions evaluated */
-int **cost_matrix;
+/*
+ The solution vector stores the position of each element. So solution[i] is where the ith circuit
+ element should be in the circuit.
+ */
 
-//seems this could be improved such that when we do a swap we only
-//recalculate cost for the portions which have actually changed,
-//so only the chips which swapped, and the chips connected to those
-//chips, just doing it quick and dirty for a first pass
-double solution_cost(int *input, int size)
+
+
+template < class T, class S >
+long long swap(T &connections, int size, S &solution, int i1, int i2)
 {
-	int i, j;
-	double totalCost = 0;
-	for (i = 0, j = 1; i < size && j < size; j++) {
-		totalCost += cost_matrix[i][j] * abs(input[i] - input[j]);
-		if (j == size - 1) {
-			i++;
-			j = i;
+	long long delta = 0;
+	
+	int a = solution[i1]; // original position of i1 in the circuit
+	int b = solution[i2]; // original position of i2 in the circuit
+	
+	// perform the swap
+	solution[i1] = b;
+	solution[i2] = a;
+	
+	// we need a to be before b in the circuit
+	if (a > b) {
+		int t = b;
+		b = a;
+		a = t;
+		
+		// swap the indices to match
+		int ti = i2;
+		i2 = i1;
+		i1 = ti;
+	}
+	
+	/*
+	 There are three separate sets of connections that need to be considered:
+	 
+	 1. Before a (a will get farther away, b will get closer)
+	 2. Between a and b (the distance change needs to be calculated, it could be closer or farther)
+	 3. After b (a will get closer, b will get farther away)
+	 */
+	
+	int sep = b - a;
+	
+	for (int i = 0; i < size; i++) {
+		// i1 and i2 stay at the same distance from each other, so skip them
+		if (i == i1 || i == i2) {
+			continue;
+		}
+		
+		int pos = solution[i];
+		
+		// if its before a, i1 will get farther away and i2 will get closer
+		if (pos < a) {
+			delta += sep * connections[i][i1];
+			delta -= sep * connections[i][i2];
+		}
+		// if its after b, i1 will get closer and i2 will get farther away
+		else if (pos > b) {
+			delta -= sep * connections[i][i1];
+			delta += sep * connections[i][i2];
+		}
+		// if its between them, we need to calculate the change in distance as it could be closer or farther
+		else {
+			int dist_change = (b - pos) - (pos - a); // the amount the distance changes for i1
+			// If its positive, i1 got farther away and i2 got closer.
+			delta += dist_change * connections[i][i1];
+			delta -= dist_change * connections[i][i2];
 		}
 	}
-	return totalCost;
+	
+	return delta;
 }
 
-
-void solution_count_update(int *input, int size)
+template < class T, class S >
+void initialize_solution(T &connections, int size, S &solution, long long &cost)
 {
-	solution_count = solution_count + 1;
-	if ((solution_count % 10000) == 0) {
-		printf("%d %7.1f\n", solution_count, solution_cost(input, size));
-		for (int i = 0; i < size; i++) {
-			printf(" %d=%d", i, input[i]);
+	// initialize the solution so that the ith circuit element is in the ith position
+	for (int i = 0; i < size; i++) {
+		solution[i] = i;
+		for (int j = i + 1; j < size; j++) {
+			if (j == i) {
+				continue;
+			}
+
+			cost += abs(i - j) * connections[i][j];
 		}
-		printf("\n");
 	}
 }
 
-void swap(int *input, int x, int y)
+template < class T, class S >
+void anneal(T &connections, int size, S &solution, long long &cost)
 {
-	int temp;
-	temp = input[x];
-	input[x] = input[y];
-	input[y] = temp;
-}
-
-void anneal(int *input, int size)
-{
-	int i1, i2;                 /* pair of items to swap */
-	int i, j;                   /* counters */
-	double temperature;         /* the current system temp */
-	double current_value;       /* value of current state */
-	double start_value;         /* value at start of loop */
-	double delta;               /* value after swap */
-	double merit, flip;         /* hold swap accept conditions*/
-	double exponent;            /* exponent for energy funct*/
-
 	srand((unsigned int)time(NULL));
 
-	temperature = INITIAL_TEMPERATURE;
+	double temperature = INITIAL_TEMPERATURE; // the current system temp
 
-	current_value = solution_cost(input, size);
+	for (int i = 1; i <= COOLING_STEPS; i++) {
+		long long before_cost = cost; // value at start of loop
 
-	for (i = 1; i <= COOLING_STEPS; i++) {
-		temperature *= COOLING_FRACTION;
-
-		start_value = current_value;
-
-		for (j = 1; j <= STEPS_PER_TEMP; j++) {
-
-			/* pick indices of elements to swap */
+		for (int j = 1; j <= STEPS_PER_TEMP; j++) {
+			int i1, i2;
+			// pick indices of elements to swap
+			do {
 			i1 = rand() % size;
 			i2 = rand() % size;
+			} while (i1 == i2);
 
-			swap(input, i1, i2);
-			delta = solution_cost(input, size) - current_value;
+			// calculate the cost of the change
+			long long delta = swap(connections, size, solution, i1, i2);
 
-			flip = ((double)rand()) / ((double)RAND_MAX);
-			exponent = (-delta / current_value) / (K * temperature);
-			merit = pow(E, exponent);
-			/*printf("merit = %f  flip=%f  exponent=%f\n",merit,flip,exponent); */
-			/*if (merit >= 1.0)
-			merit = 0.0;*/ /* don't do unchanging swaps*/
+			double flip = (double)rand()/RAND_MAX;
+			//exponent = (-delta / cost) / (K * temperature);
 
-			if (delta < 0) { /*ACCEPT-WIN*/
-				current_value = current_value + delta;
+			// I don't understand why the above divides the delta by the cost
+			double merit = exp(-delta / (K * temperature));
+
+			// printf("merit = %f  flip=%f  exponent=%f\n",merit,flip,exponent);
+			// if (merit >= 1.0)
+			// merit = 0.0; // don't do unchanging swaps
+
+			if (delta < 0) { // automatically accept a lower cost
+				cost += delta;
 
 				if (TRACE_OUTPUT) {
-					printf("swap WIN %d--%d value %f  temp=%f i=%d j=%d\n",
-					       i1, i2, current_value, temperature, i, j);
+					cout << "swap WIN " << i1 << "-" << i2 << " delta=" << delta << " temp=" << temperature << " cooling step=" << i << " step=" << j << endl;
 				}
 			}
-			else {
-				if (merit > flip) {         /*ACCEPT-LOSS*/
-					current_value = current_value + delta;
-					if (TRACE_OUTPUT) {
-						printf("swap LOSS %d--%d value %f merit=%f flip=%f i=%d j=%d\n",
-						       i1, i2, current_value, merit, flip, i, j);
-					}
-				}
-				else {                   /* REJECT */
-					swap(input, i1, i2);
+			else if (merit > flip) { // accept a loss if the the random number generator says so
+				cost += delta;
+
+				if (TRACE_OUTPUT) {
+					cout << "swap LOSS " << i1 << "-" << i2 << " delta=" << delta << " temp=" << temperature << " cooling step=" << i << " step=" << j << endl;
 				}
 			}
-			solution_count_update(input, size);
-		}
-		if ((current_value - start_value) < 0.0) { /* rerun at this temp */
-			temperature /= COOLING_FRACTION;
+			else { // revert the swap
+				swap(connections, size, solution, i1, i2);
+			}
+			
 			if (TRACE_OUTPUT) {
-				printf("rerun at temperature %f\n", temperature);
+				cout << "Cost: " << cost << endl;
+			}
+		}
+		
+		// if the cost isn't going down, lower the temperature
+		if ((cost - before_cost) >= 0) {
+			temperature *= COOLING_FRACTION;
+			
+			if (TRACE_OUTPUT) {
+				cout << "reduce temperature to " << temperature << endl;
 			}
 		}
 	}
@@ -135,56 +179,53 @@ void anneal(int *input, int size)
 
 void anneal_file(string filename, long steps)
 {
-	/*
-    ifstream input(filename);
+	ifstream input(filename);
 	if (input.fail()) {
 		cout << "Error opening file" << endl;
 		return;
 	}
 
-	string line;
-    
-    int chips;
-    
-    // load line count
-    {
-        getline(input, line);
-        stringstream ss(line);
-        ss >> chips;
-    }
+	int size;
 
-	
-	int *order;
+	// load line count
+	{
+		string line;
+		getline(input, line);
+		stringstream stream(line);
+		stream >> size;
+	}
 
-	input.getline(line, sizeof(line));
-	chips = atoi(line);
-	order = new int[chips];
-	cost_matrix = new int*[chips];
-	for (int i = 0; i < chips; i++) {
-		cost_matrix[i] = new int[chips];
-	}
-	for (int i = 0; i < chips; i++) {
-		order[i] = i;
-	}
-	for (int i = 0; i < chips; i++) {
-		char *token;
-		input.getline(line, sizeof(line));
-		token = strtok(line, " ");
-		cost_matrix[i][0] = atoi(token);
-		for (int j = 1; j < chips; j++) {
-			token = strtok(NULL, " ");
-			cost_matrix[i][j] = atoi(token);
+	matrix<int> connections(size, size);
+
+	for (int i = 0; i < size; i++) {
+		string line;
+		getline(input, line);
+		stringstream stream(line);
+
+		for (int j = 0; j < size; j++) {
+			stream >> connections[i][j];
 		}
 	}
-	anneal(order, chips);
 
-	for (int i = 0; i < chips; i++) {
-		printf(" chip %d=pos %d", i, order[i]);
+	vector<int> solution(size);
+
+	long long cost;
+
+	initialize_solution(connections, size, solution, cost);
+	
+	anneal(connections, size, solution, cost);
+
+	vector<int> order(size);
+	
+	for (int i = 0; i < size; i++) {
+		order[solution[i]] = i;
 	}
-	printf("\ncost is %d\n", (int)solution_cost(order, chips));
-	for (int i = 0; i < chips; i++) {
-		delete cost_matrix[i];
+	
+	cout << order[0];
+	for (int i = 1; i < size; i++) {
+		cout << " " << order[i];
 	}
-	delete cost_matrix;
-     */
+	cout << endl;
+
+	cout << cost << endl;
 }
